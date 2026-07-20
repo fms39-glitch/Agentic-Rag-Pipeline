@@ -231,4 +231,4 @@ print(result["status"])  # success | unverified | llm_fallback
 
 ## License
 
-Portfolio / educational project. Add a license if you publish publicly.
+Educational project.
