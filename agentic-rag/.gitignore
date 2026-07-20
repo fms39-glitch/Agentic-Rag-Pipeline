@@ -1,0 +1,57 @@
+# Environment & secrets
+.env*
+.env.local
+.env.*.local
+.env.example
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Caches & test coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+
+# IDE & editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local source documents (add PDFs/txt locally, then run ingest)
+data/*
+!data/.gitkeep
+
+# Logs
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Model / cache artifacts (if stored locally later)
+*.pt
+*.bin
+*.onnx
+.cache/

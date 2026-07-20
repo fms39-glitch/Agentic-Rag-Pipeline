@@ -1,0 +1,6 @@
+langgraph
+openai
+supabase
+sentence-transformers
+python-dotenv
+pypdf
