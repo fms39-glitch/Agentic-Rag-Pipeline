@@ -2,24 +2,24 @@ from typing import Literal
 
 from langgraph.graph import END, START, StateGraph
 
+from nodes.fallback import FALLBACK_DISCLAIMER, fallback_node, is_insufficient_answer
 from nodes.generate import generate_node
 from nodes.grade import grade_node
 from nodes.retrieve import retrieve_node
 from nodes.rewrite import rewrite_node
 from nodes.verify import verify_node
-from state import DEFAULT_MAX_RETRIES, AgentState, RetrievedChunk
+from state import DEFAULT_MAX_RETRIES, AgentState
 
-NOT_ENOUGH_INFO_MESSAGE = "I don't have enough information to answer this."
 UNVERIFIED_DISCLAIMER = (
     "\n\n[Disclaimer: This answer could not be fully verified against the source documents.]"
 )
 
 
-def finish_not_enough(state: AgentState) -> AgentState:
+def finish_fallback(state: AgentState) -> AgentState:
     return {
         **state,
-        "final_answer": NOT_ENOUGH_INFO_MESSAGE,
-        "status": "not_enough_info",
+        "final_answer": state["draft_answer"] + FALLBACK_DISCLAIMER,
+        "status": "llm_fallback",
     }
 
 
@@ -41,12 +41,20 @@ def finish_unverified(state: AgentState) -> AgentState:
 
 def route_after_grade(
     state: AgentState,
-) -> Literal["generate", "rewrite", "finish_not_enough"]:
+) -> Literal["generate", "rewrite", "fallback"]:
     if state["graded_chunks"]:
         return "generate"
     if state["retry_count"] < state["max_retries"]:
         return "rewrite"
-    return "finish_not_enough"
+    return "fallback"
+
+
+def route_after_generate(
+    state: AgentState,
+) -> Literal["verify", "fallback"]:
+    if is_insufficient_answer(state["draft_answer"]):
+        return "fallback"
+    return "verify"
 
 
 def route_after_verify(
@@ -67,7 +75,8 @@ def _build_graph():
     builder.add_node("rewrite", rewrite_node)
     builder.add_node("generate", generate_node)
     builder.add_node("verify", verify_node)
-    builder.add_node("finish_not_enough", finish_not_enough)
+    builder.add_node("fallback", fallback_node)
+    builder.add_node("finish_fallback", finish_fallback)
     builder.add_node("finish_success", finish_success)
     builder.add_node("finish_unverified", finish_unverified)
 
@@ -75,10 +84,11 @@ def _build_graph():
     builder.add_edge("retrieve", "grade")
     builder.add_conditional_edges("grade", route_after_grade)
     builder.add_edge("rewrite", "retrieve")
-    builder.add_edge("generate", "verify")
+    builder.add_conditional_edges("generate", route_after_generate)
     builder.add_conditional_edges("verify", route_after_verify)
+    builder.add_edge("fallback", "finish_fallback")
 
-    builder.add_edge("finish_not_enough", END)
+    builder.add_edge("finish_fallback", END)
     builder.add_edge("finish_success", END)
     builder.add_edge("finish_unverified", END)
 

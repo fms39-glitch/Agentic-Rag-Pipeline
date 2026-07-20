@@ -5,9 +5,19 @@ from llm import get_model
 
 
 def _grounding_label(status: str, is_grounded: bool) -> str:
-    if status == "not_enough_info":
-        return "N/A (no answer generated)"
+    if status == "llm_fallback":
+        return "N/A (answered from general LLM knowledge)"
     return "Yes" if is_grounded else "No"
+
+
+def _source_label(status: str) -> str:
+    if status == "success":
+        return "Your documents (verified)"
+    if status == "unverified":
+        return "Your documents (unverified)"
+    if status == "llm_fallback":
+        return "General LLM knowledge (not from documents)"
+    return status
 
 
 def _print_summary(result: dict) -> None:
@@ -16,6 +26,7 @@ def _print_summary(result: dict) -> None:
     print(f"Chunks kept after grading: {len(result['graded_chunks'])}")
     print(f"Retries: {result['retry_count']}")
     print(f"Grounding passed: {_grounding_label(result['status'], result['is_grounded'])}")
+    print(f"Answer source: {_source_label(result['status'])}")
     print(f"Status: {result['status']}")
 
 

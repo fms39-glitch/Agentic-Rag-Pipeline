@@ -24,7 +24,7 @@ class AgentState(TypedDict):
     retry_count: How many retry cycles have run so far.
     max_retries: Upper bound on retries before the graph exits; initialize to 3.
     final_answer: The answer returned to the caller after a terminal node runs.
-    status: Outcome label — success, not_enough_info, or unverified.
+    status: Outcome — success, llm_fallback, or unverified.
     """
 
     question: str
